@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Saved posts - NEXTGEN{% endblock %}
+
+{% block extra_head %}
+<style>
+  .saved-shell { display: grid; gap: 1.25rem; }
+  .saved-header { padding: 1.25rem; }
+  .saved-header h1 { margin: 0 0 0.35rem; }
+  .saved-header p { margin: 0; color: var(--text-muted); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="saved-shell">
+  <section class="surface saved-header">
+    <h1>Saved posts</h1>
+    <p>{{ saved_posts_count }} item{{ saved_posts_count|pluralize }} ready to revisit, share, or turn into action.</p>
+  </section>
+
+  {% for post in saved_posts %}
+    {% include "components/post_card.html" with post=post %}
+  {% empty %}
+    <section class="surface saved-header" style="text-align:center;">
+      <h2>No saved posts yet</h2>
+      <p>When a post inspires you, use the Save button from the feed to keep it close.</p>
+      <a href="{% url 'feed' %}" class="btn btn--primary">Explore feed</a>
+    </section>
+  {% endfor %}
+</div>
+{% endblock %}

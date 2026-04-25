@@ -1,0 +1,17 @@
+{% for post in posts %}
+  {% include "components/post_card.html" with post=post %}
+{% empty %}
+  {% if not request.GET.page or request.GET.page == "1" %}
+    <div class="empty-card surface">
+      <i class="bi bi-stars"></i>
+      <h3>Aucune publication</h3>
+      <p>Le fil s'animera des que la premiere idee sera partagee.</p>
+    </div>
+  {% endif %}
+{% endfor %}
+
+{% if posts.has_next %}
+  <div class="js-next-page-data" data-next-page="{{ posts.next_page_number }}" hidden></div>
+{% else %}
+  <div class="js-no-more-posts" hidden></div>
+{% endif %}

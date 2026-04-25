@@ -1,0 +1,7 @@
+<article class="message-bubble {% if message.sender_id == user.pk %}is-me{% endif %}">
+  <div class="message-bubble__meta">
+    <strong>{% if message.sender_id == user.pk %}You{% else %}{{ message.sender.get_full_name|default:message.sender.username }}{% endif %}</strong>
+    <span>{{ message.created_at|date:"H:i" }}</span>
+  </div>
+  <p>{{ message.body }}</p>
+</article>

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Edit profile - NEXTGEN{% endblock %}
+
+{% block extra_head %}
+<style>
+  .edit-shell {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+  .edit-card {
+    padding: 1.5rem;
+  }
+  .edit-grid {
+    display: grid;
+    gap: 1rem;
+  }
+  .field {
+    display: grid;
+    gap: 0.45rem;
+  }
+  .field label {
+    font-weight: 700;
+    color: var(--text-soft);
+  }
+  .field input,
+  .field textarea {
+    width: 100%;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    background: var(--panel-strong);
+    color: var(--text);
+    padding: 0.95rem 1rem;
+  }
+  .field textarea { min-height: 120px; resize: vertical; }
+  .field .errorlist {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--danger);
+    font-size: 0.9rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="edit-shell">
+  <section class="surface edit-card">
+    <h1 style="margin:0 0 0.45rem;">Edit profile</h1>
+    <p style="margin:0 0 1.5rem; color:var(--text-muted);">Refine your identity, bio, and skills to make your profile stronger and more credible.</p>
+
+    <form method="post" enctype="multipart/form-data" class="edit-grid">
+      {% csrf_token %}
+      <h2 style="margin:0;">Identity</h2>
+      {% for field in uform %}
+        <div class="field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {{ field.errors }}
+        </div>
+      {% endfor %}
+
+      <h2 style="margin:0.5rem 0 0;">Public profile</h2>
+      {% if user.profile.avatar %}
+        <div class="field" style="display:flex; align-items:center; gap:1.25rem; padding:1.1rem; border-radius:20px; border:1px solid var(--border); background:var(--panel-strong);">
+          <div style="width:72px; height:72px; border-radius:18px; overflow:hidden; flex-shrink:0;">
+            <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}" style="width:100%; height:100%; object-fit:cover;">
+          </div>
+          <div style="flex:1;">
+            <strong style="display:block; margin-bottom:0.25rem;">Current photo</strong>
+            <p style="margin:0; font-size:0.88rem; color:var(--text-muted);">This is how others see you on the platform.</p>
+          </div>
+          <button type="button" class="btn btn--danger btn--sm" onclick="if(confirm('Delete your profile photo?')) document.getElementById('avatar-delete-form').submit();">
+            <i class="bi bi-trash"></i><span>Delete</span>
+          </button>
+        </div>
+      {% endif %}
+
+      {% for field in pform %}
+        <div class="field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {{ field.errors }}
+        </div>
+      {% endfor %}
+
+      <div style="display:flex; justify-content:flex-end; gap:0.75rem; flex-wrap:wrap; margin-top:0.5rem;">
+        <a href="{% url 'profile-me' %}" class="btn btn--ghost">Cancel</a>
+        <button type="submit" class="btn btn--primary">Save changes</button>
+      </div>
+    </form>
+  </section>
+
+  <form id="avatar-delete-form" method="post" action="{% url 'profile-avatar-delete' %}" hidden>
+    {% csrf_token %}
+  </form>
+</div>
+{% endblock %}

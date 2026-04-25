@@ -1,0 +1,1280 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Feed - NEXTGEN{% endblock %}
+
+{% block extra_head %}
+<style>
+  .feed-grid {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr) 320px;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  .feed-column {
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  .sidebar-card,
+  .stories-card,
+  .composer-card,
+  .post-card,
+  .trend-card,
+  .empty-card {
+    padding: 1.25rem;
+  }
+
+  .sticky-card {
+    position: sticky;
+    top: 98px;
+  }
+
+  .sidebar-title,
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin: 0 0 1rem;
+    font-size: 1rem;
+    font-weight: 800;
+  }
+
+  .menu-list,
+  .trend-list,
+  .achiever-list,
+  .suggestions-list {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .menu-list a {
+    padding: 0.9rem 1rem;
+    border-radius: 18px;
+    color: var(--text-soft);
+    background: transparent;
+    border: 1px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all var(--transition);
+  }
+
+  .menu-list a:hover,
+  .menu-list a.is-active {
+    background: var(--gradient-soft);
+    border-color: rgba(79, 70, 229, 0.16);
+    color: var(--text);
+  }
+
+  .stories-card {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .stories-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .story-strip {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(170px, 1fr);
+    gap: 0.9rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+
+  .story-tile {
+    min-height: 205px;
+    padding: 1rem;
+    border-radius: 24px;
+    position: relative;
+    overflow: hidden;
+    color: white;
+    background: linear-gradient(160deg, rgba(37, 99, 235, 0.86), rgba(124, 58, 237, 0.82));
+    box-shadow: var(--shadow-soft);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .story-tile:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+  }
+
+  /* Story Viewer Modal */
+  .story-viewer {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.95);
+    display: none;
+    place-items: center;
+    padding: 2rem;
+  }
+
+  .story-viewer.is-active {
+    display: grid;
+  }
+
+  .story-viewer__container {
+    position: relative;
+    width: 100%;
+    max-width: 450px;
+    aspect-ratio: 9/16;
+    background: var(--gradient);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  }
+
+  .story-viewer__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .story-viewer__content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 1.5rem;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.7) 100%);
+    color: white;
+  }
+
+  .story-viewer__header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .story-viewer__avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.2);
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+
+  .story-viewer__close {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10;
+  }
+
+  .story-viewer__body {
+    font-size: 1.1rem;
+    line-height: 1.4;
+    font-weight: 500;
+  }
+
+  .story-tile--create {
+    border: 1px dashed rgba(255, 255, 255, 0.38);
+    cursor: pointer;
+    transition: transform var(--transition), box-shadow var(--transition);
+  }
+
+  .story-tile--create:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 34px rgba(79, 70, 229, 0.3);
+  }
+
+  .story-tile img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.42;
+  }
+
+  .story-tile__content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+  }
+
+  .story-tile__author {
+    width: 44px;
+    height: 44px;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.28);
+    font-weight: 800;
+  }
+
+  .story-form {
+    display: grid;
+    gap: 0.85rem;
+    padding: 1rem;
+    border-radius: 22px;
+    background: var(--panel-strong);
+    border: 1px solid var(--border);
+  }
+
+  .story-form[hidden] {
+    display: none;
+  }
+
+  .story-helper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.9rem 1rem;
+    border-radius: 18px;
+    background: var(--panel-strong);
+    border: 1px solid var(--border);
+    color: var(--text-soft);
+  }
+
+  .story-form input {
+    width: 100%;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+    padding: 0.9rem 1rem;
+  }
+
+  .composer-card {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .composer-top {
+    display: flex;
+    gap: 0.9rem;
+    align-items: center;
+  }
+
+  .composer-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 18px;
+    background: var(--gradient);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 1.1rem;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  .composer-prompt {
+    flex: 1;
+    min-height: 54px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--panel-strong);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    padding: 0 1.15rem;
+    font-weight: 600;
+  }
+
+  .composer-form {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .composer-fields {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .composer-row {
+    display: grid;
+    grid-template-columns: 170px minmax(0, 1fr);
+    gap: 0.8rem;
+  }
+
+  .composer-form input,
+  .composer-form select,
+  .composer-form textarea {
+    width: 100%;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    background: var(--panel-strong);
+    color: var(--text);
+    padding: 0.95rem 1rem;
+  }
+
+  .composer-form textarea {
+    min-height: 118px;
+    resize: vertical;
+  }
+
+  .composer-form select[name="post_type"],
+  .composer-form input[type="file"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .composer-file-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding: 0.9rem 1rem;
+    border-radius: 18px;
+    border: 1px dashed var(--border);
+    background: var(--panel-strong);
+  }
+
+  .composer-file-name {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+  }
+
+  .composer-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr) auto;
+    gap: 0.75rem;
+    align-items: center;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .composer-action {
+    min-height: 46px;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    background: var(--panel-strong);
+    color: var(--text-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+
+  .composer-action:hover,
+  .composer-action.is-selected {
+    border-color: rgba(79, 70, 229, 0.24);
+    background: var(--gradient-soft);
+    color: var(--text);
+  }
+
+  .share-menu {
+    position: absolute;
+    z-index: 60;
+    min-width: 220px;
+    padding: 0.6rem;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    box-shadow: var(--shadow);
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .share-menu[hidden] {
+    display: none;
+  }
+
+  .share-menu__item {
+    width: 100%;
+    border: none;
+    background: transparent;
+    color: var(--text-soft);
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.8rem 0.9rem;
+    border-radius: 14px;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .share-menu__item:hover {
+    background: var(--gradient-soft);
+    color: var(--text);
+  }
+
+  .post-card {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .post-card__header,
+  .post-card__author,
+  .post-card__metrics,
+  .post-card__actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .post-card__author {
+    justify-content: flex-start;
+  }
+
+  .post-card__avatar,
+  .comment-item__avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 18px;
+    overflow: hidden;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    background: var(--gradient);
+    color: #fff;
+    font-weight: 800;
+  }
+
+  .post-card__author strong {
+    display: block;
+    margin-bottom: 0.2rem;
+  }
+
+  .post-card__author small {
+    color: var(--text-muted);
+  }
+
+  .post-card__type {
+    padding: 0.5rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    background: var(--gradient-soft);
+  }
+
+  .post-card__body h3 {
+    margin: 0 0 0.55rem;
+    font-size: 1.2rem;
+  }
+
+  .post-card__body p {
+    margin: 0;
+    line-height: 1.7;
+    color: var(--text-soft);
+  }
+
+  .post-card__image {
+    margin-top: 1rem;
+    overflow: hidden;
+    border-radius: 22px;
+    border: 1px solid var(--border);
+  }
+
+  .post-card__image img {
+    width: 100%;
+    max-height: 460px;
+    object-fit: cover;
+  }
+
+  .post-card__metrics {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    justify-content: flex-start;
+  }
+
+  .action-pill {
+    min-height: 42px;
+    padding: 0 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-soft);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+
+  .action-pill:hover {
+    border-color: rgba(79, 70, 229, 0.25);
+    background: var(--gradient-soft);
+    color: var(--text);
+  }
+
+  .action-pill.is-liked {
+    color: var(--danger);
+    border-color: rgba(225, 29, 72, 0.24);
+    background: rgba(225, 29, 72, 0.1);
+  }
+
+  .action-pill.is-saved {
+    color: var(--primary);
+    border-color: rgba(37, 99, 235, 0.22);
+    background: rgba(37, 99, 235, 0.1);
+  }
+
+  .comments-panel {
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+  }
+
+  .comments-list {
+    display: grid;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+  }
+
+  .comment-item {
+    display: flex;
+    gap: 0.85rem;
+    align-items: flex-start;
+  }
+
+  .comment-item__avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+  }
+
+  .comment-item__body {
+    flex: 1;
+    background: var(--panel-strong);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 0.85rem 1rem;
+  }
+
+  .comment-item__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .comment-item__header span,
+  .comments-empty {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+  }
+
+  .comment-item__body p {
+    margin: 0;
+    color: var(--text-soft);
+  }
+
+  .comment-form {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-end;
+  }
+
+  .comment-form textarea {
+    flex: 1;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    background: var(--panel-strong);
+    color: var(--text);
+    padding: 0.9rem 1rem;
+  }
+
+  .feed-loader {
+    display: none;
+    place-items: center;
+    padding: 1rem;
+    color: var(--text-muted);
+  }
+
+  .feed-loader.is-visible {
+    display: grid;
+  }
+
+  .suggestion-row,
+  .trend-item,
+  .achiever-item {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    justify-content: space-between;
+  }
+
+  .suggestion-row__meta,
+  .trend-item__meta,
+  .achiever-item__meta {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mini-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    background: var(--gradient);
+    color: white;
+    font-weight: 800;
+    overflow: hidden;
+  }
+
+  .mini-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .meta-label {
+    display: block;
+    font-weight: 700;
+  }
+
+  .meta-copy {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+  }
+
+  .empty-card {
+    text-align: center;
+  }
+
+  .empty-card i {
+    font-size: 2.1rem;
+    color: var(--primary);
+  }
+
+  @media (max-width: 1080px) {
+    .feed-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .sticky-card {
+      position: static;
+    }
+
+    .composer-row,
+    .composer-actions {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="feed-grid">
+  <aside class="feed-column">
+    <div class="surface sidebar-card sticky-card">
+      <h2 class="sidebar-title"><i class="bi bi-grid-1x2-fill"></i> Navigation</h2>
+      <nav class="menu-list">
+        <a href="{% url 'feed' %}" class="is-active"><i class="bi bi-house-heart"></i>Fil d'actualite</a>
+        <a href="{% url 'profile-me' %}"><i class="bi bi-person-badge"></i>Mon profil</a>
+        <a href="{% url 'saved-posts' %}"><i class="bi bi-bookmark-heart"></i>Posts sauvegardes</a>
+        <a href="{% url 'messages' %}"><i class="bi bi-chat-dots"></i>Messages</a>
+      </nav>
+    </div>
+  </aside>
+
+  <section class="feed-column">
+    <div class="surface stories-card">
+      <div class="stories-head">
+        <h2 class="section-title" style="margin:0;"><i class="bi bi-play-circle-fill"></i> Stories</h2>
+        {% if user.is_authenticated %}
+          <button type="button" class="btn btn--secondary btn--sm js-story-toggle"><i class="bi bi-plus-circle"></i>Nouvelle story</button>
+        {% endif %}
+      </div>
+
+      {% if user.is_authenticated %}
+        <form method="post" action="{% url 'story-create' %}" enctype="multipart/form-data" class="story-form" id="story-form" hidden>
+          {% csrf_token %}
+          {{ story_form.content }}
+          {{ story_form.image }}
+          <div style="display:flex; justify-content:flex-end;">
+            <button type="submit" class="btn btn--primary btn--sm">Publish story</button>
+          </div>
+        </form>
+        <div class="story-helper">
+          <span>Cliquez sur "Creer une story" pour partager une mise a jour rapide, une photo ou une nouvelle avec votre reseau.</span>
+          <button type="button" class="btn btn--ghost btn--sm js-story-toggle">Ouvrir</button>
+        </div>
+      {% endif %}
+
+      <div class="story-strip">
+        {% if user.is_authenticated %}
+          <article class="story-tile story-tile--create js-story-toggle" role="button" tabindex="0" aria-label="Create story">
+            <div class="story-tile__content">
+              <div class="story-tile__author"><i class="bi bi-plus-lg"></i></div>
+              <div>
+                <strong>Creer une story</strong>
+                <p style="margin:0.35rem 0 0; color:rgba(255,255,255,0.92);">Partagez un moment fort, une mise a jour ou un coulisses en un clic.</p>
+              </div>
+            </div>
+          </article>
+        {% endif %}
+        {% for story in stories %}
+          <article class="story-tile js-story-view" 
+            data-author="{{ story.author.username }}" 
+            data-content="{{ story.content|default:'Daily update' }}" 
+            data-image="{% if story.image %}{{ story.image.url }}{% endif %}"
+            data-time="{{ story.created_at|timesince }}"
+            style="cursor: pointer;"
+          >
+            {% if story.image %}<img src="{{ story.image.url }}" alt="{{ story.author.username }}">{% endif %}
+            <div class="story-tile__content">
+              <div class="story-tile__author">{{ story.author.username|upper|first }}</div>
+              <div style="flex: 1;">
+                <strong>{{ story.author.username }}</strong>
+                <p style="margin:0.25rem 0 0; color:rgba(255,255,255,0.92); font-size: 0.85rem;">{{ story.content|default:"Daily update" }}</p>
+                <small style="font-size: 0.7rem; color: rgba(255,255,255,0.7);">{{ story.created_at|timesince }}</small>
+              </div>
+              {% if user.is_authenticated and story.author_id == user.pk %}
+                <form action="{% url 'story-delete' story.pk %}" method="post" style="position: absolute; top: 10px; right: 10px;">
+                  {% csrf_token %}
+                  <button type="submit" class="btn-icon" style="color: white; background: rgba(0,0,0,0.3); border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border: none; font-size: 12px;" onclick="return confirm('Supprimer cette story ?')">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              {% endif %}
+            </div>
+          </article>
+        {% empty %}
+          <article class="story-tile">
+            <div class="story-tile__content">
+              <div class="story-tile__author"><i class="bi bi-stars"></i></div>
+              <div>
+                <strong>Partagez la premiere story</strong>
+                <p style="margin:0.35rem 0 0; color:rgba(255,255,255,0.92);">Postez une victoire rapide, une lecon apprise ou une mise a jour pour la communaute.</p>
+              </div>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% if user.is_authenticated %}
+      <div class="surface composer-card">
+        <div class="composer-top">
+          <div class="composer-avatar" style="overflow:hidden;">
+            {% if user.profile.avatar %}
+              <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}" style="width:100%; height:100%; object-fit:cover;">
+            {% else %}
+              {{ user.username|upper|first }}
+            {% endif %}
+          </div>
+          <div class="composer-prompt">Qu'allez-vous partager ?</div>
+        </div>
+
+        <form method="post" action="{% url 'post-create' %}" enctype="multipart/form-data" class="composer-form" id="post-create-form">
+          {% csrf_token %}
+          <div class="composer-fields">
+            <div class="composer-row">
+              {{ post_form.post_type }}
+              {{ post_form.title }}
+            </div>
+            {{ post_form.description }}
+            
+            {{ post_form.image }}
+            <div class="composer-file-row">
+              <span class="composer-file-name" id="composer-file-name">Aucun fichier selectionne</span>
+              <button type="button" class="btn btn--ghost btn--sm" id="composer-file-trigger"><i class="bi bi-image"></i>Choisir un fichier</button>
+            </div>
+          </div>
+
+          <div class="composer-actions">
+            <button type="button" class="composer-action js-composer-action" data-type="project"><i class="bi bi-layers"></i>Projet</button>
+            <button type="button" class="composer-action js-composer-action" data-type="internship"><i class="bi bi-briefcase"></i>Stage</button>
+            <button type="button" class="composer-action js-composer-action" data-type="tip"><i class="bi bi-lightbulb"></i>Astuce</button>
+            <button type="submit" class="btn btn--primary">Publier</button>
+          </div>
+        </form>
+      </div>
+    {% endif %}
+
+    <div class="feed-filters" style="display:flex; gap:0.75rem; margin-bottom:0.5rem; overflow-x:auto; padding-bottom:0.5rem;">
+      <a href="{% url 'feed' %}" class="btn btn--sm {% if not request.GET.type %}btn--primary{% else %}btn--secondary{% endif %}" style="border-radius:12px;">Tout</a>
+      <a href="{% url 'feed' %}?type=project" class="btn btn--sm {% if request.GET.type == 'project' %}btn--primary{% else %}btn--secondary{% endif %}" style="border-radius:12px;"><i class="bi bi-layers"></i>Projets</a>
+      <a href="{% url 'feed' %}?type=internship" class="btn btn--sm {% if request.GET.type == 'internship' %}btn--primary{% else %}btn--secondary{% endif %}" style="border-radius:12px;"><i class="bi bi-briefcase"></i>Stages</a>
+      <a href="{% url 'feed' %}?type=tip" class="btn btn--sm {% if request.GET.type == 'tip' %}btn--primary{% else %}btn--secondary{% endif %}" style="border-radius:12px;"><i class="bi bi-lightbulb"></i>Astuces</a>
+    </div>
+
+    <div class="feed-column" id="feed-posts">
+      {% include "components/feed_posts.html" %}
+    </div>
+    <div class="feed-loader" id="feed-loader"><span>Chargement du fil...</span></div>
+    {% if next_page_number %}
+      <div id="feed-sentinel" data-next-page="{{ next_page_number }}"></div>
+    {% endif %}
+  </section>
+
+  <aside class="feed-column">
+    <div class="surface trend-card sticky-card">
+      <h2 class="section-title"><i class="bi bi-person-hearts"></i>Suggestions</h2>
+      <div class="suggestions-list">
+        {% for suggestion in suggestions %}
+          <a href="{% url 'profile-detail' suggestion.pk %}" class="suggestion-row" style="text-decoration:none; color:inherit;">
+            <div style="display:flex; align-items:center; gap:0.85rem; min-width:0;">
+              <span class="mini-avatar">
+                {% if suggestion.profile.avatar %}
+                  <img src="{{ suggestion.profile.avatar.url }}" alt="{{ suggestion.username }}">
+                {% else %}
+                  {{ suggestion.username|upper|first }}
+                {% endif %}
+              </span>
+              <div class="suggestion-row__meta">
+                <span class="meta-label">{{ suggestion.username }}</span>
+                <span class="meta-copy"><span data-followers-count>{{ suggestion.followers }}</span> followers - {{ suggestion.posts_count }} posts</span>
+              </div>
+            </div>
+            <form method="post" action="{% url 'user-follow' suggestion.pk %}" class="js-follow-form" style="display:inline;">
+              {% csrf_token %}
+              <button type="submit" class="btn btn--secondary btn--sm">Suivre</button>
+            </form>
+          </a>
+        {% empty %}
+          <p class="meta-copy">Votre reseau est deja bien connecte.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% if trending_posts %}
+      <div class="surface trend-card" style="margin-top: 1.25rem;">
+        <h2 class="section-title"><i class="bi bi-graph-up-arrow"></i>Tendances</h2>
+        <div class="trend-list">
+          {% for tpost in trending_posts %}
+            <a href="{% url 'feed' %}#post-{{ tpost.pk }}" class="trend-item" style="text-decoration:none; color:inherit;">
+              <div class="trend-item__meta">
+                <span class="meta-label">{{ tpost.title|truncatechars:35 }}</span>
+                <span class="meta-copy">{{ tpost.likes_count }} likes - {{ tpost.comments_count }} comments</span>
+              </div>
+              <i class="bi bi-chevron-right" style="color:var(--text-muted);"></i>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  </aside>
+</div>
+
+<div class="share-menu" id="share-menu" hidden>
+  <button type="button" class="share-menu__item" data-share-action="republish"><i class="bi bi-people"></i>Partager a mes followers</button>
+  <button type="button" class="share-menu__item" data-share-action="copy"><i class="bi bi-link-45deg"></i>Copier le lien</button>
+  <button type="button" class="share-menu__item" data-share-action="whatsapp"><i class="bi bi-whatsapp"></i>WhatsApp</button>
+  <button type="button" class="share-menu__item" data-share-action="facebook"><i class="bi bi-facebook"></i>Facebook</button>
+  <button type="button" class="share-menu__item" data-share-action="open"><i class="bi bi-box-arrow-up-right"></i>Ouvrir</button>
+</div>
+
+<script>
+  // Global Vars
+  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+  const shareMenu = document.getElementById("share-menu");
+  let currentSharePayload = null;
+
+  // Story Viewer Logic
+  const storyViewer = document.getElementById("story-viewer");
+  const storyViewerImg = document.getElementById("story-viewer-img");
+  const storyViewerAuthor = document.getElementById("story-viewer-author");
+  const storyViewerAvatar = document.getElementById("story-viewer-avatar");
+  const storyViewerBody = document.getElementById("story-viewer-body");
+  const storyViewerTime = document.getElementById("story-viewer-time");
+  const storyViewerClose = document.getElementById("story-viewer-close");
+
+  function openStory(data) {
+    storyViewerAuthor.textContent = data.author;
+    storyViewerAvatar.textContent = data.author.charAt(0).toUpperCase();
+    storyViewerBody.textContent = data.content;
+    storyViewerTime.textContent = data.time + " ago";
+    
+    if (data.image) {
+      storyViewerImg.src = data.image;
+      storyViewerImg.hidden = false;
+    } else {
+      storyViewerImg.hidden = true;
+    }
+    
+    storyViewer.classList.add("is-active");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeStory() {
+    storyViewer.classList.remove("is-active");
+    document.body.style.overflow = "";
+  }
+
+  async function recordShare(postId, sourceButton = null) {
+    if (!postId) return;
+    const response = await fetchWithCsrf(`/post/${postId}/share/`, { method: "POST" });
+    if (!response.ok) return;
+    const data = await response.json();
+    if (sourceButton) {
+      const metricNode = sourceButton.closest(".post-card")?.querySelector("[data-share-count]");
+      if (metricNode) {
+        metricNode.textContent = data.shares_count;
+      }
+    }
+  }
+
+  function fetchWithCsrf(url, options = {}) {
+    const headers = new Headers(options.headers || {});
+    headers.set("X-Requested-With", "XMLHttpRequest");
+    if (csrfToken && !headers.has("X-CSRFToken")) {
+      headers.set("X-CSRFToken", csrfToken);
+    }
+    return fetch(url, { ...options, headers });
+  }
+
+  function toggleStoryForm(forceOpen = false) {
+    const form = document.getElementById("story-form");
+    if (!form) return;
+    form.hidden = forceOpen ? false : !form.hidden;
+    if (!form.hidden) {
+      form.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      form.querySelector("textarea, input")?.focus();
+    }
+  }
+
+  document.querySelectorAll(".js-story-toggle").forEach((trigger) => {
+    trigger.addEventListener("click", () => toggleStoryForm());
+    trigger.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        toggleStoryForm();
+      }
+    });
+  });
+
+  document.addEventListener("click", async (event) => {
+    // Open Story
+    const tile = event.target.closest(".js-story-view");
+    if (tile && !event.target.closest("form")) {
+      openStory(tile.dataset);
+      return;
+    }
+    
+    // Close Story
+    if (event.target === storyViewer || event.target === storyViewerClose || event.target.closest("#story-viewer-close")) {
+      closeStory();
+      return;
+    }
+
+    const commentToggle = event.target.closest(".js-comment-toggle");
+    if (commentToggle) {
+      const panel = document.getElementById(commentToggle.dataset.target);
+      if (panel) panel.hidden = !panel.hidden;
+    }
+
+    const shareBtn = event.target.closest(".js-share-btn");
+    if (shareBtn) {
+      event.stopPropagation();
+      currentSharePayload = {
+        postId: shareBtn.dataset.sharePostId,
+        url: shareBtn.dataset.shareUrl,
+        title: shareBtn.dataset.shareTitle || "NEXTGEN",
+        text: shareBtn.dataset.shareText || "Check out this post on NEXTGEN.",
+        sourceButton: shareBtn,
+      };
+      const rect = shareBtn.getBoundingClientRect();
+      shareMenu.hidden = false;
+      shareMenu.style.top = `${window.scrollY + rect.bottom + 8}px`;
+      shareMenu.style.left = `${Math.max(16, window.scrollX + rect.right - 220)}px`;
+      return;
+    }
+
+    const shareAction = event.target.closest("[data-share-action]");
+    if (shareAction && currentSharePayload) {
+      const action = shareAction.dataset.shareAction;
+      const { postId, url, title, text, sourceButton } = currentSharePayload;
+      shareMenu.hidden = true;
+      if (action === "republish") {
+        const response = await fetchWithCsrf(`/post/${postId}/republish/`, { method: "POST" });
+        if (response.ok) {
+          const data = await response.json();
+          window.location.href = data.redirect_url;
+        }
+        return;
+      }
+      await recordShare(postId, sourceButton);
+      if (action === "native" && navigator.share) {
+        try {
+          await navigator.share({ title, text, url });
+        } catch (error) {}
+        return;
+      }
+      if (action === "copy") {
+        try {
+          await navigator.clipboard.writeText(url);
+        } catch (error) {
+          window.prompt("Copy this link:", url);
+        }
+        return;
+      }
+      if (action === "whatsapp") {
+        window.open(`https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`, "_blank", "noopener");
+        return;
+      }
+      if (action === "facebook") {
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, "_blank", "noopener");
+        return;
+      }
+      if (action === "open") {
+        window.open(url, "_blank", "noopener");
+        return;
+      }
+    }
+
+    if (shareMenu && !event.target.closest(".share-menu")) {
+      shareMenu.hidden = true;
+    }
+  });
+
+  const composerForm = document.querySelector(".composer-form");
+  const postTypeInput = composerForm?.querySelector('select[name="post_type"]');
+  const imageInput = composerForm?.querySelector('input[type="file"]');
+  const fileNameNode = document.getElementById("composer-file-name");
+
+  function selectComposerType(type) {
+    if (postTypeInput) {
+      postTypeInput.value = type;
+    }
+    document.querySelectorAll(".js-composer-action").forEach((button) => {
+      button.classList.toggle("is-selected", button.dataset.type === type);
+    });
+  }
+
+  document.querySelectorAll(".js-composer-action").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectComposerType(button.dataset.type);
+    });
+  });
+
+  document.getElementById("composer-file-trigger")?.addEventListener("click", () => imageInput?.click());
+  imageInput?.addEventListener("change", () => {
+    const file = imageInput.files?.[0];
+    if (fileNameNode) {
+      fileNameNode.textContent = file ? file.name : "No media selected";
+    }
+  });
+
+  if (postTypeInput) {
+    selectComposerType(postTypeInput.value || "project");
+  }
+
+  document.addEventListener("submit", async (event) => {
+    const likeForm = event.target.closest(".js-like-form");
+    if (likeForm) {
+      event.preventDefault();
+      const button = likeForm.querySelector("button");
+      const countNode = likeForm.closest(".post-card").querySelector("[data-like-count]");
+      const response = await fetchWithCsrf(likeForm.action, { method: "POST" });
+      if (response.ok) {
+        const data = await response.json();
+        button.classList.toggle("is-liked", data.liked);
+        button.querySelector("i").className = `bi ${data.liked ? "bi-heart-fill" : "bi-heart"}`;
+        button.querySelector("span").textContent = data.liked ? "Liked" : "Like";
+        countNode.textContent = data.likes_count;
+      }
+      return;
+    }
+
+    const followForm = event.target.closest(".js-follow-form");
+    if (followForm) {
+      event.preventDefault();
+      const button = followForm.querySelector("button");
+      const countNode = followForm.closest(".suggestion-row")?.querySelector("[data-followers-count]");
+      const response = await fetchWithCsrf(followForm.action, { method: "POST" });
+      if (response.ok) {
+        const data = await response.json();
+        button.textContent = data.following ? "Ne plus suivre" : "Suivre";
+        button.className = `btn ${data.following ? "btn--ghost" : "btn--secondary"} btn--sm`;
+        if (countNode) {
+          countNode.textContent = data.followers_count;
+        }
+      }
+      return;
+    }
+
+    const saveForm = event.target.closest(".js-save-form");
+    if (saveForm) {
+      event.preventDefault();
+      const button = saveForm.querySelector("button");
+      const countNode = saveForm.closest(".post-card")?.querySelector("[data-save-count]");
+      const response = await fetchWithCsrf(saveForm.action, { method: "POST" });
+      if (response.ok) {
+        const data = await response.json();
+        button.classList.toggle("is-saved", data.saved);
+        button.querySelector("i").className = `bi ${data.saved ? "bi-bookmark-heart-fill" : "bi-bookmark-heart"}`;
+        button.querySelector("span").textContent = data.saved ? "Sauvegarde" : "Sauvegarder";
+        if (countNode) {
+          countNode.textContent = data.saves_count;
+        }
+        saveForm.action = data.saved ? saveForm.action.replace("/sauvegarder/", "/retirer-sauvegarde/") : saveForm.action.replace("/retirer-sauvegarde/", "/sauvegarder/");
+      }
+      return;
+    }
+
+    const commentForm = event.target.closest(".js-comment-form");
+    if (commentForm) {
+      event.preventDefault();
+      const formData = new FormData(commentForm);
+      const response = await fetchWithCsrf(commentForm.action, { method: "POST", body: formData });
+      if (response.ok) {
+        const data = await response.json();
+        const list = commentForm.closest(".comments-panel").querySelector(".comments-list");
+        const emptyState = list.querySelector(".comments-empty");
+        if (emptyState) emptyState.remove();
+        list.insertAdjacentHTML("beforeend", data.comment_html);
+        commentForm.reset();
+        commentForm.closest(".post-card").querySelector("[data-comment-count]").textContent = data.comments_count;
+      }
+      return;
+    }
+
+    const commentDeleteForm = event.target.closest(".js-comment-delete-form");
+    if (commentDeleteForm) {
+      event.preventDefault();
+      if (!confirm("Voulez-vous vraiment supprimer ce commentaire ?")) return;
+      const response = await fetchWithCsrf(commentDeleteForm.action, { method: "POST" });
+      if (response.ok) {
+        const data = await response.json();
+        const commentItem = commentDeleteForm.closest(".comment-item");
+        const postCard = commentDeleteForm.closest(".post-card");
+        if (commentItem) commentItem.remove();
+        if (postCard && data.comments_count !== undefined) {
+          postCard.querySelector("[data-comment-count]").textContent = data.comments_count;
+        }
+      }
+    }
+  });
+
+  // Handle post creation form
+  const postCreateForm = document.getElementById("post-create-form");
+  if (postCreateForm) {
+    postCreateForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const formData = new FormData(postCreateForm);
+      const response = await fetchWithCsrf(postCreateForm.action, {
+        method: "POST",
+        body: formData
+      });
+      if (response.ok) {
+        window.location.href = "{% url 'feed' %}";
+      } else {
+        const html = await response.text();
+        document.body.innerHTML = html;
+      }
+    });
+  }
+
+  // Handle post delete form
+  document.querySelectorAll(".js-delete-form").forEach(form => {
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!confirm("Voulez-vous vraiment supprimer cette publication ?")) return;
+      const response = await fetchWithCsrf(form.action, { method: "POST" });
+      if (response.ok) {
+        const postCard = form.closest(".post-card");
+        if (postCard) {
+          postCard.remove();
+        }
+      }
+    });
+  });
+
+  const sentinel = document.getElementById("feed-sentinel");
+  const loader = document.getElementById("feed-loader");
+  const postsContainer = document.getElementById("feed-posts");
+  let isLoading = false;
+
+  async function loadNextPage(page) {
+    if (isLoading || !sentinel) return;
+    isLoading = true;
+    
+    loader?.classList.add("is-visible");
+
+    try {
+      const response = await fetch(`{% url 'feed' %}?page=${page}&partial=posts`, {
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      });
+      
+      if (!response.ok) {
+        sentinel.remove();
+        return;
+      }
+
+      const html = await response.text();
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = html;
+      
+      // On cherche les nouveaux posts
+      const newPosts = tempDiv.querySelectorAll('.post-card');
+      
+      // On cherche les informations de pagination renvoyées par le serveur
+      const nextPageMarker = tempDiv.querySelector('.js-next-page-data');
+      const noMorePostsMarker = tempDiv.querySelector('.js-no-more-posts');
+
+      if (newPosts.length > 0) {
+        postsContainer.insertAdjacentHTML("beforeend", html);
+        if (window.Prism) {
+          window.Prism.highlightAllUnder(postsContainer);
+        }
+      }
+
+      if (noMorePostsMarker || !nextPageMarker) {
+        console.log("Fin du fil détectée par le serveur.");
+        sentinel.remove();
+      } else {
+        const nextNum = nextPageMarker.dataset.nextPage;
+        sentinel.dataset.nextPage = nextNum;
+      }
+
+    } catch (err) {
+      console.error("Erreur de chargement:", err);
+      sentinel.remove();
+    } finally {
+      loader?.classList.remove("is-visible");
+      isLoading = false;
+    }
+  }
+
+  if (sentinel) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        // rootMargin réduit à 50px pour plus de précision
+        if (entry.isIntersecting && !isLoading) {
+          const nextPage = sentinel.dataset.nextPage;
+          if (nextPage) {
+            loadNextPage(nextPage);
+          } else {
+            sentinel.remove();
+          }
+        }
+      });
+    }, { rootMargin: "50px" });
+    observer.observe(sentinel);
+  }
+</script>
+{% endblock %}

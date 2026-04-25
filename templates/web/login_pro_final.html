@@ -1,0 +1,661 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Sign in - NEXTGEN{% endblock %}
+
+{% block extra_head %}
+<style>
+  .auth-container {
+    display: grid;
+    grid-template-columns: 1.08fr 0.92fr;
+    gap: 1.5rem;
+    min-height: calc(100vh - var(--nav-height) - 2rem);
+  }
+  .auth-left,
+  .auth-form-card {
+    border: 1px solid var(--border);
+    border-radius: 32px;
+    box-shadow: var(--shadow);
+  }
+  .auth-left {
+    background:
+      radial-gradient(circle at top left, rgba(37,99,235,0.14), transparent 30%),
+      linear-gradient(145deg, #f7fbff 0%, #eef4ff 48%, #f7f8ff 100%);
+    padding: 3rem;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+  [data-theme="dark"] .auth-left {
+    background:
+      radial-gradient(circle at top left, rgba(37,99,235,0.14), transparent 30%),
+      linear-gradient(145deg, rgba(17,28,52,0.96) 0%, rgba(24,37,66,0.96) 48%, rgba(17,28,52,0.96) 100%);
+  }
+  .auth-branding {
+    width: 100%;
+    display: grid;
+    gap: 1.6rem;
+  }
+  .auth-brand-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .auth-brand-row img {
+    width: 84px;
+    height: 84px;
+    border-radius: 24px;
+    object-fit: contain;
+    background: transparent;
+    box-shadow: none;
+  }
+  .auth-brand-row h1 {
+    margin: 0;
+    font-size: 2.7rem;
+    line-height: 1;
+    letter-spacing: -0.05em;
+  }
+  .auth-brand-row p {
+    margin: 0.4rem 0 0;
+    color: var(--primary);
+    font-weight: 700;
+  }
+  .auth-tagline {
+    margin: 0;
+    color: var(--text-soft);
+    line-height: 1.8;
+    font-size: 1.02rem;
+    max-width: 58ch;
+  }
+  .auth-artboard {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    align-items: center;
+  }
+  .auth-phone {
+    min-height: 430px;
+    border-radius: 34px;
+    background: #ffffff;
+    border: 8px solid #1e293b;
+    box-shadow: 0 25px 50px rgba(37, 99, 235, 0.25);
+    position: relative;
+    overflow: hidden;
+  }
+  .auth-phone-container {
+    position: absolute;
+    inset: 8px;
+    border-radius: 26px;
+    overflow: hidden;
+    background: #f8fafc;
+  }
+  .auth-phone-header {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .auth-phone-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .auth-phone-logo span {
+    width: 24px;
+    height: 24px;
+    background: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #3b82f6;
+  }
+  .auth-phone-search {
+    background: rgba(255,255,255,0.2);
+    padding: 6px 12px;
+    border-radius: 20px;
+    color: rgba(255,255,255,0.8);
+    font-size: 11px;
+  }
+  .auth-phone-stories {
+    display: flex;
+    gap: 10px;
+    padding: 12px;
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+    overflow-x: auto;
+  }
+  .auth-phone-story {
+    width: 50px;
+    height: 50px;
+    border-radius: 16px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: white;
+  }
+  .auth-phone-story:nth-child(1) { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+  .auth-phone-story:nth-child(2) { background: linear-gradient(135deg, #10b981, #06b6d4); }
+  .auth-phone-story:nth-child(3) { background: linear-gradient(135deg, #8b5cf6, #ec4899); }
+  .auth-phone-story:nth-child(4) { background: linear-gradient(135deg, #3b82f6, #6366f1); }
+  .auth-phone-story.add {
+    background: #e2e8f0;
+    border: 2px dashed #94a3b8;
+    color: #64748b;
+  }
+  .auth-phone-feed {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .auth-phone-post {
+    background: white;
+    border-radius: 16px;
+    padding: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .auth-phone-post-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .auth-phone-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+  }
+  .auth-phone-post-header div {
+    flex: 1;
+  }
+  .auth-phone-post-header strong {
+    display: block;
+    font-size: 12px;
+    color: #1e293b;
+  }
+  .auth-phone-post-header small {
+    font-size: 10px;
+    color: #94a3b8;
+  }
+  .auth-phone-post-badge {
+    font-size: 9px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    background: #e0f2fe;
+    color: #0284c7;
+    font-weight: 600;
+  }
+  .auth-phone-post-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 6px;
+  }
+  .auth-phone-post-desc {
+    font-size: 11px;
+    color: #64748b;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .auth-phone-post-image {
+    margin-top: 10px;
+    height: 60px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+  }
+  .auth-phone-post-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+  }
+  .auth-phone-action {
+    font-size: 10px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .auth-phone-nav {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    padding: 10px;
+    display: flex;
+    justify-content: space-around;
+  }
+  .auth-phone-nav-item {
+    width: 24px;
+    height: 24px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+  }
+  .auth-phone-nav-item.active {
+    background: #3b82f6;
+    color: white;
+  }
+  .auth-phone-nav-item:nth-child(2),
+  .auth-phone-nav-item:nth-child(3),
+  .auth-phone-nav-item:nth-child(4) {
+    color: #94a3b8;
+  }
+  .auth-mini-cards {
+    display: grid;
+    gap: 1rem;
+  }
+  .mini-card {
+    background: rgba(255,255,255,0.75);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(37, 99, 235, 0.1);
+    border-radius: 24px;
+    padding: 1rem;
+    box-shadow: 0 18px 32px rgba(15, 23, 42, 0.08);
+  }
+  [data-theme="dark"] .mini-card {
+    background: rgba(15, 23, 42, 0.62);
+    border-color: rgba(148, 163, 184, 0.14);
+  }
+  .feature-item {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+  .feature-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 16px;
+    background: rgba(37,99,235,0.1);
+    display: grid;
+    place-items: center;
+    color: var(--primary);
+    flex-shrink: 0;
+  }
+  .feature-text h4 {
+    margin: 0 0 0.2rem;
+    font-size: 1rem;
+  }
+  .feature-text p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.92rem;
+  }
+  .auth-right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .auth-form-wrapper {
+    width: 100%;
+    max-width: 460px;
+  }
+  .auth-form-card {
+    background: var(--panel);
+    padding: 2.4rem;
+  }
+  .auth-form-header h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.8rem;
+  }
+  .auth-form-header p {
+    margin: 0 0 2rem;
+    color: var(--text-muted);
+  }
+  .form-group {
+    margin-bottom: 1.35rem;
+  }
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--text-soft);
+  }
+  .form-input-wrapper {
+    position: relative;
+  }
+  .form-input,
+  .form-control {
+    width: 100% !important;
+    padding: 0.95rem 1rem 0.95rem 2.85rem !important;
+    background: var(--panel-strong) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 18px !important;
+    color: var(--text) !important;
+  }
+  .form-input::placeholder,
+  .form-control::placeholder {
+    color: var(--text-muted) !important;
+  }
+  .form-input:focus,
+  .form-control:focus {
+    outline: none !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12) !important;
+  }
+  .form-icon,
+  .password-toggle {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+  }
+  .form-icon {
+    left: 1rem;
+  }
+  .password-toggle {
+    right: 1rem;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+  }
+  .form-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.2rem 0 1.8rem;
+    flex-wrap: wrap;
+  }
+  .form-footer label,
+  .form-footer a {
+    color: var(--text-soft);
+    font-size: 0.9rem;
+    text-decoration: none;
+  }
+  .form-checkbox {
+    accent-color: var(--primary);
+  }
+  .btn-submit {
+    width: 100%;
+    padding: 1rem;
+    background: var(--gradient);
+    color: white;
+    border: none;
+    border-radius: 999px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: var(--shadow-soft);
+  }
+  .btn-submit:hover {
+    transform: translateY(-1px);
+  }
+  .form-error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.24);
+    color: var(--danger);
+    padding: 0.8rem 0.95rem;
+    border-radius: 16px;
+    margin-bottom: 1rem;
+  }
+  .form-help-text,
+  .auth-footer p,
+  .social-login {
+    color: var(--text-muted);
+  }
+  .social-login {
+    text-align: center;
+    margin: 1.2rem 0;
+  }
+  .social-icons {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+  }
+  .social-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--border);
+    background: var(--panel-strong);
+    color: var(--text);
+    text-decoration: none;
+  }
+  .social-btn.facebook { color: #1877f2; }
+  .social-btn.google { color: #db4437; }
+  .auth-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+  }
+  .auth-footer a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 700;
+  }
+  @media (max-width: 920px) {
+    .auth-container {
+      grid-template-columns: 1fr;
+    }
+    .auth-left {
+      display: none;
+    }
+    .auth-right {
+      padding: 0;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+  <div class="auth-left">
+    <div class="auth-branding">
+      <div class="auth-brand-row">
+        <img src="{% static 'images/logo.svg' %}" alt="NEXTGEN logo">
+        <div>
+          <h1>NEXTGEN</h1>
+          <p>Build your next professional chapter.</p>
+        </div>
+      </div>
+      <p class="auth-tagline">A modern social experience designed for growth, strong profiles, meaningful posts, stories, and real professional connections.</p>
+
+      <div class="auth-artboard">
+        <div class="auth-phone">
+          <div class="auth-phone-container">
+            <div class="auth-phone-header">
+              <div class="auth-phone-logo">
+                <span>N</span> NEXTGEN
+              </div>
+              <div class="auth-phone-search">Search...</div>
+            </div>
+            <div class="auth-phone-stories">
+              <div class="auth-phone-story add">+</div>
+              <div class="auth-phone-story">A</div>
+              <div class="auth-phone-story">M</div>
+              <div class="auth-phone-story">Y</div>
+            </div>
+            <div class="auth-phone-feed">
+              <div class="auth-phone-post">
+                <div class="auth-phone-post-header">
+                  <div class="auth-phone-avatar" style="background: linear-gradient(135deg, #f59e0b, #ef4444);">A</div>
+                  <div>
+                    <strong>Anass Zaari</strong>
+                    <small>2h ago</small>
+                  </div>
+                  <span class="auth-phone-post-badge">Project</span>
+                </div>
+                <div class="auth-phone-post-title">New Django Project Launch</div>
+                <div class="auth-phone-post-desc">Just launched my new social network project with Django!</div>
+                <div class="auth-phone-post-image"></div>
+                <div class="auth-phone-post-actions">
+                  <span class="auth-phone-action"><i class="bi bi-heart"></i> 24</span>
+                  <span class="auth-phone-action"><i class="bi bi-chat"></i> 8</span>
+                  <span class="auth-phone-action"><i class="bi bi-share"></i> 3</span>
+                </div>
+              </div>
+              <div class="auth-phone-post">
+                <div class="auth-phone-post-header">
+                  <div class="auth-phone-avatar" style="background: linear-gradient(135deg, #10b981, #06b6d4);">M</div>
+                  <div>
+                    <strong>Mohamed Amine</strong>
+                    <small>5h ago</small>
+                  </div>
+                  <span class="auth-phone-post-badge">Tip</span>
+                </div>
+                <div class="auth-phone-post-title">Django Best Practices</div>
+                <div class="auth-phone-post-desc">Here are some tips for building scalable Django applications...</div>
+              </div>
+            </div>
+            <div class="auth-phone-nav">
+              <div class="auth-phone-nav-item active"><i class="bi bi-house"></i></div>
+              <div class="auth-phone-nav-item"><i class="bi bi-search"></i></div>
+              <div class="auth-phone-nav-item"><i class="bi bi-bell"></i></div>
+              <div class="auth-phone-nav-item"><i class="bi bi-person"></i></div>
+            </div>
+          </div>
+        </div>
+        <div class="auth-mini-cards">
+          <div class="mini-card">
+            <div class="feature-item">
+              <div class="feature-icon"><i class="bi bi-collection-play"></i></div>
+              <div class="feature-text">
+                <h4>Clear stories</h4>
+                <p>A dedicated story area with stronger hierarchy and cleaner presentation.</p>
+              </div>
+            </div>
+          </div>
+          <div class="mini-card">
+            <div class="feature-item">
+              <div class="feature-icon"><i class="bi bi-chat-dots"></i></div>
+              <div class="feature-text">
+                <h4>Direct messaging</h4>
+                <p>Start conversations from profiles and from your contact list in one click.</p>
+              </div>
+            </div>
+          </div>
+          <div class="mini-card">
+            <div class="feature-item">
+              <div class="feature-icon"><i class="bi bi-moon-stars"></i></div>
+              <div class="feature-text">
+                <h4>Balanced dark mode</h4>
+                <p>Better contrast, cleaner color balance and more polished interface elements.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-right">
+    <div class="auth-form-wrapper">
+      <div class="auth-form-card">
+        <div class="auth-form-header">
+          <h2>Sign in to NEXTGEN</h2>
+          <p>Access your feed, your network, your stories and your growth journey.</p>
+        </div>
+
+        <form method="post" action="{% url 'auth-login' %}" id="login-form">
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+            <div class="form-error">{{ form.non_field_errors }}</div>
+          {% endif %}
+
+          <div class="form-group">
+            <label for="{{ form.username.id_for_label }}">Email address</label>
+            <div class="form-input-wrapper">
+              {{ form.username }}
+              <i class="bi bi-envelope form-icon"></i>
+            </div>
+            {% if form.username.errors %}
+              <div class="form-error">{{ form.username.errors }}</div>
+            {% endif %}
+            <p class="form-help-text">Use the email address linked to your account.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="{{ form.password.id_for_label }}">Password</label>
+            <div class="form-input-wrapper">
+              {{ form.password }}
+              <i class="bi bi-lock form-icon"></i>
+              <button type="button" class="password-toggle" onclick="togglePassword()">
+                <i id="pwd-icon" class="bi bi-eye-slash"></i>
+              </button>
+            </div>
+            {% if form.password.errors %}
+              <div class="form-error">{{ form.password.errors }}</div>
+            {% endif %}
+          </div>
+
+          <div class="form-footer">
+            <label>
+              <input type="checkbox" name="remember-me" class="form-checkbox">
+              Remember me
+            </label>
+            <a href="#">Forgot password?</a>
+          </div>
+
+          {% if next %}
+            <input type="hidden" name="next" value="{{ next }}">
+          {% endif %}
+
+          <button type="submit" class="btn-submit">Sign in</button>
+        </form>
+
+        <div class="social-login">
+          <p>Or continue with</p>
+          <div class="social-icons">
+            <a href="#" class="social-btn facebook" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+            <a href="#" class="social-btn google" aria-label="Google"><i class="bi bi-google"></i></a>
+            <a href="#" class="social-btn" aria-label="GitHub"><i class="bi bi-github"></i></a>
+          </div>
+        </div>
+
+        <div class="auth-footer">
+          <p>New here? <a href="{% url 'auth-register-web' %}">Create your account</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function togglePassword() {
+    const pwdInput = document.getElementById('{{ form.password.id_for_label }}');
+    const pwdIcon = document.getElementById('pwd-icon');
+    if (pwdInput.type === 'password') {
+      pwdInput.type = 'text';
+      pwdIcon.className = 'bi bi-eye';
+    } else {
+      pwdInput.type = 'password';
+      pwdIcon.className = 'bi bi-eye-slash';
+    }
+  }
+
+  document.getElementById('login-form').addEventListener('submit', function() {
+    const btn = document.querySelector('.btn-submit');
+    btn.style.opacity = '0.7';
+    btn.disabled = true;
+    setTimeout(() => {
+      btn.style.opacity = '1';
+      btn.disabled = false;
+    }, 2000);
+  });
+</script>
+{% endblock %}

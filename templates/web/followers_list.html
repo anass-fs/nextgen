@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}{{ list_title }} - NEXTGEN{% endblock %}
+
+{% block extra_head %}
+<style>
+  .search-shell { display: grid; gap: 1.25rem; max-width: 800px; margin: 0 auto; }
+  .results-panel { padding: 1.25rem; }
+  .results-list { display: grid; gap: 0.9rem; }
+  .user-result {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    justify-content: space-between;
+    padding: 1rem;
+    border-radius: 18px;
+    background: var(--panel-strong);
+    border: 1px solid var(--border);
+  }
+  .user-result__main {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    min-width: 0;
+    text-decoration: none;
+    color: inherit;
+  }
+  .user-result__avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    background: var(--gradient);
+    color: white;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    overflow: hidden;
+  }
+  .user-result__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .user-result__meta strong {
+    display: block;
+  }
+  .user-result__meta p {
+    margin: 0.25rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-shell">
+  <section class="surface results-panel">
+    <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem;">
+        <a href="{% url 'profile-detail' profile_user.pk %}" class="btn btn--ghost btn--sm"><i class="bi bi-arrow-left"></i> Retour</a>
+        <h2 style="margin:0;">{{ list_title }}</h2>
+    </div>
+    
+    <div class="results-list">
+      {% for result in target_users %}
+        <article class="user-result">
+          <a href="{% url 'profile-detail' result.pk %}" class="user-result__main">
+            <span class="user-result__avatar">
+              {% if result.profile.avatar %}
+                <img src="{{ result.profile.avatar.url }}" alt="{{ result.username }}">
+              {% else %}
+                {{ result.username|upper|first }}
+              {% endif %}
+            </span>
+            <span class="user-result__meta">
+              <strong>{{ result.get_full_name|default:result.username }}</strong>
+              <p>@{{ result.username }} - {{ result.followers_count }} followers</p>
+            </span>
+          </a>
+          <a href="{% url 'profile-detail' result.pk %}" class="btn btn--secondary btn--sm">Voir</a>
+        </article>
+      {% empty %}
+        <p style="color:var(--text-muted); text-align:center; padding:2rem;">Aucun utilisateur trouvé dans cette liste.</p>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

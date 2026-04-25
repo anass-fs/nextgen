@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Create account - NEXTGEN{% endblock %}
+
+{% block extra_head %}
+<style>
+  .register-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 470px;
+    gap: 1.5rem;
+    min-height: calc(100vh - var(--nav-height) - 2rem);
+  }
+
+  .register-showcase,
+  .register-card {
+    border: 1px solid var(--border);
+    border-radius: 32px;
+    box-shadow: var(--shadow);
+  }
+
+  .register-showcase {
+    padding: 2rem;
+    background:
+      radial-gradient(circle at top left, rgba(37,99,235,0.16), transparent 30%),
+      linear-gradient(140deg, rgba(37,99,235,0.08), rgba(124,58,237,0.08)),
+      var(--panel);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .register-showcase::after {
+    content: "";
+    position: absolute;
+    right: -60px;
+    top: -60px;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: rgba(79, 70, 229, 0.08);
+    filter: blur(8px);
+  }
+
+  .showcase-header {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .showcase-header img {
+    width: 84px;
+    height: 84px;
+    border-radius: 24px;
+    object-fit: cover;
+    box-shadow: var(--shadow-soft);
+    animation: floatCard 6s ease-in-out infinite;
+  }
+
+  .showcase-header h1 {
+    margin: 0;
+    font-size: 2.8rem;
+    line-height: 1;
+    letter-spacing: -0.05em;
+  }
+
+  .showcase-header p {
+    margin: 0.4rem 0 0;
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  .showcase-copy {
+    position: relative;
+    z-index: 1;
+    color: var(--text-soft);
+    line-height: 1.85;
+    font-size: 1.02rem;
+    max-width: 62ch;
+    margin-bottom: 1.4rem;
+  }
+
+  .showcase-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .showcase-box {
+    padding: 1rem;
+    border-radius: 24px;
+    background: var(--panel-strong);
+    border: 1px solid var(--border);
+    transform: translateY(14px);
+    opacity: 0;
+    animation: slideReveal 0.8s ease forwards;
+  }
+
+  .showcase-box:nth-child(2) { animation-delay: 0.1s; }
+  .showcase-box:nth-child(3) { animation-delay: 0.2s; }
+  .showcase-box:nth-child(4) { animation-delay: 0.3s; }
+
+  .showcase-box i {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border-radius: 16px;
+    color: var(--primary);
+    background: var(--gradient-soft);
+    margin-bottom: 0.8rem;
+  }
+
+  .showcase-box h3 {
+    margin: 0 0 0.35rem;
+    font-size: 1rem;
+  }
+
+  .showcase-box p {
+    margin: 0;
+    color: var(--text-muted);
+    line-height: 1.7;
+    font-size: 0.92rem;
+  }
+
+  .register-side {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .register-card {
+    width: 100%;
+    background: var(--panel);
+    padding: 2.4rem;
+  }
+
+  .register-card h2 {
+    margin: 0 0 0.45rem;
+    font-size: 1.9rem;
+  }
+
+  .register-card .sub {
+    margin: 0 0 1.6rem;
+    color: var(--text-muted);
+  }
+
+  .field {
+    margin-bottom: 1.1rem;
+  }
+
+  .field label {
+    display: block;
+    margin-bottom: 0.45rem;
+    font-weight: 700;
+    color: var(--text-soft);
+  }
+
+  .field input {
+    width: 100%;
+    padding: 0.95rem 1rem;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    background: var(--panel-strong);
+    color: var(--text);
+    transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+  }
+
+  .field input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(37,99,235,0.12);
+    transform: translateY(-1px);
+  }
+
+  .field-error {
+    margin-top: 0.4rem;
+    color: var(--danger);
+    font-size: 0.86rem;
+  }
+
+  .split-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    border-radius: 999px;
+    background: var(--gradient);
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: var(--shadow-soft);
+    transition: transform var(--transition), box-shadow var(--transition);
+  }
+
+  .submit-btn:hover {
+    transform: translateY(-1px);
+  }
+
+  .helper {
+    margin-top: 0.75rem;
+    color: var(--text-muted);
+    font-size: 0.86rem;
+  }
+
+  .footer-link {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  .footer-link a {
+    color: var(--primary);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  @keyframes floatCard {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  @keyframes slideReveal {
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @media (max-width: 960px) {
+    .register-shell {
+      grid-template-columns: 1fr;
+    }
+    .showcase-grid,
+    .split-fields {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="register-shell">
+  <section class="register-showcase">
+    <div class="showcase-header">
+      <img src="{% static 'images/logo.svg' %}" alt="NEXTGEN logo">
+      <div>
+        <h1>NEXTGEN</h1>
+        <p>Build a clear professional presence</p>
+      </div>
+    </div>
+
+    <p class="showcase-copy">
+      Join NEXTGEN to build a professional profile, share strong content, publish stories in a clear layout and develop a network that supports your goals.
+    </p>
+
+    <div class="showcase-grid">
+      <article class="showcase-box">
+        <i class="bi bi-person-workspace"></i>
+        <h3>Professional profile</h3>
+        <p>Show your cover, skills, projects and achievements in a polished profile layout.</p>
+      </article>
+      <article class="showcase-box">
+        <i class="bi bi-collection-play"></i>
+        <h3>Stories and posts</h3>
+        <p>Keep stories separate from the main feed for a clearer and more premium experience.</p>
+      </article>
+      <article class="showcase-box">
+        <i class="bi bi-chat-dots"></i>
+        <h3>Direct messaging</h3>
+        <p>Reach your contacts easily from profiles and from the messaging workspace.</p>
+      </article>
+      <article class="showcase-box">
+        <i class="bi bi-moon-stars"></i>
+        <h3>Clean theme system</h3>
+        <p>Readable dark mode and light mode designed for a serious product look.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="register-side">
+    <div class="register-card">
+      <div class="showcase-header" style="justify-content:center; margin-bottom:1.2rem;">
+        <img src="{% static 'images/logo.svg' %}" alt="NEXTGEN logo" style="width:72px; height:72px; border-radius:20px;">
+        <div>
+          <h1 style="font-size:2.1rem;">NEXTGEN</h1>
+          <p>Build a clear professional presence</p>
+        </div>
+      </div>
+      
+      <h2>Create account</h2>
+      <p class="sub">Already a member? <a href="{% url 'auth-login' %}" style="color:var(--primary); font-weight:700; text-decoration:none;">Sign in</a></p>
+
+      <form method="post">
+        {% csrf_token %}
+
+        <div class="field">
+          <label for="id_username">Username</label>
+          <input type="text" name="username" id="id_username" value="{{ form.username.value|default:'' }}" placeholder="Choose your username" required>
+          {% if form.username.errors %}<div class="field-error">{{ form.username.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="field">
+          <label for="id_email">Email address</label>
+          <input type="email" name="email" id="id_email" value="{{ form.email.value|default:'' }}" placeholder="you@email.com" required>
+          {% if form.email.errors %}<div class="field-error">{{ form.email.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="split-fields">
+          <div class="field">
+            <label for="id_password">Password</label>
+            <input type="password" name="password" id="id_password" placeholder="Minimum 8 characters" required>
+          </div>
+          <div class="field">
+            <label for="id_password_confirm">Confirm password</label>
+            <input type="password" name="password_confirm" id="id_password_confirm" placeholder="Confirm password" required>
+          </div>
+        </div>
+
+        {% if form.password.errors %}<div class="field-error">{{ form.password.errors.0 }}</div>{% endif %}
+        {% if form.password_confirm.errors %}<div class="field-error">{{ form.password_confirm.errors.0 }}</div>{% endif %}
+        {% if form.non_field_errors %}<div class="field-error">{{ form.non_field_errors.0 }}</div>{% endif %}
+
+        <button type="submit" class="submit-btn">Create my account</button>
+        <p class="helper">Use at least 8 characters and choose a password you can remember easily.</p>
+      </form>
+
+      <div class="footer-link">
+        You are creating a serious space focused on growth, skills and meaningful networking.
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

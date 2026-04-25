@@ -1,0 +1,104 @@
+{% load humanize %}
+<article class="post-card surface" id="post-{{ post.pk }}">
+  <header class="post-card__header">
+    <a href="{% url 'profile-detail' post.author.pk %}" class="post-card__author">
+      <span class="post-card__avatar" style="overflow:hidden; display:grid; place-items:center; background:var(--gradient); color:white; font-weight:800;">
+        {% if post.author.profile.avatar %}
+          <img src="{{ post.author.profile.avatar.url }}" alt="{{ post.author.username }}" style="width:100%; height:100%; object-fit:cover;">
+        {% else %}
+          {{ post.author.username|upper|first }}
+        {% endif %}
+      </span>
+      <span>
+        <strong>{{ post.author.get_full_name|default:post.author.username }}</strong>
+        <small>@{{ post.author.username }} - {{ post.created_at|naturaltime }}</small>
+      </span>
+    </a>
+    <span class="post-card__type post-card__type--{{ post.post_type }}">{{ post.get_post_type_display }}</span>
+    {% if user.is_authenticated and user.pk == post.author.pk %}
+      <form method="post" action="{% url 'post-delete' post.pk %}" class="js-delete-form" style="margin-left:auto;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn--ghost btn--sm" title="Supprimer">
+          <i class="bi bi-trash"></i>
+        </button>
+      </form>
+    {% endif %}
+  </header>
+
+  <div class="post-card__body">
+    <h3>{{ post.title }}</h3>
+    <p>{{ post.description|linebreaksbr }}</p>
+    {% if post.code_snippet %}
+      <div class="post-card__code" style="margin-top: 1.15rem; position: relative;">
+        <pre class="line-numbers"><code class="language-{{ post.code_language|default:'javascript' }}">{{ post.code_snippet }}</code></pre>
+        {% if post.code_language %}
+          <span style="position: absolute; top: 0.75rem; right: 0.75rem; font-size: 0.72rem; color: rgba(255,255,255,0.45); text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em; pointer-events: none;">{{ post.code_language }}</span>
+        {% endif %}
+      </div>
+    {% endif %}
+    {% if post.image %}
+      <div class="post-card__image">
+        <img src="{{ post.image.url }}" alt="{{ post.title }}">
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="post-card__metrics">
+    <span><i class="bi bi-heart-fill"></i> <span data-like-count>{{ post.likes_count }}</span></span>
+    <span><i class="bi bi-chat-left-dots-fill"></i> <span data-comment-count>{{ post.comments_count }}</span></span>
+    <span><i class="bi bi-arrow-repeat"></i> <span data-share-count>{{ post.shares_count|default:0 }}</span></span>
+    <span><i class="bi bi-bookmark-heart-fill"></i> <span data-save-count>{{ post.saves_count|default:0 }}</span></span>
+  </div>
+
+  <div class="post-card__actions">
+    <form method="post" action="{% url 'post-like' post.pk %}" class="js-like-form">
+      {% csrf_token %}
+      <button type="submit" class="action-pill {% if post.user_has_liked %}is-liked{% endif %}">
+        <i class="bi {% if post.user_has_liked %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+        <span>{% if post.user_has_liked %}J'aime{% else %}Like{% endif %}</span>
+      </button>
+    </form>
+
+    <button type="button" class="action-pill js-comment-toggle" data-target="comments-{{ post.pk }}">
+      <i class="bi bi-chat-left-text"></i>
+      <span>Commenter</span>
+    </button>
+
+    <button
+      type="button"
+      class="action-pill js-share-btn"
+      data-share-post-id="{{ post.pk }}"
+      data-share-url="{{ request.scheme }}://{{ request.get_host }}{{ post.share_url }}"
+      data-share-title="{{ post.title }}"
+      data-share-text="{{ post.description|striptags|truncatechars:120 }}"
+    >
+      <i class="bi bi-arrow-repeat"></i>
+      <span>Partager</span>
+    </button>
+
+    <form method="post" action="{% if post.user_has_saved %}{% url 'unsave-post' post.pk %}{% else %}{% url 'save-post' post.pk %}{% endif %}" class="js-save-form">
+      {% csrf_token %}
+      <button type="submit" class="action-pill {% if post.user_has_saved %}is-saved{% endif %}">
+        <i class="bi {% if post.user_has_saved %}bi-bookmark-heart-fill{% else %}bi-bookmark-heart{% endif %}"></i>
+        <span>{% if post.user_has_saved %}Sauvegarde{% else %}Sauvegarder{% endif %}</span>
+      </button>
+    </form>
+  </div>
+
+  <section class="comments-panel" id="comments-{{ post.pk }}" hidden>
+    <div class="comments-list">
+      {% for comment in post.comments.all %}
+        {% include "components/comment_item.html" with comment=comment %}
+      {% empty %}
+        <p class="comments-empty">Soyez le premier a encourager cette publication.</p>
+      {% endfor %}
+    </div>
+    {% if user.is_authenticated %}
+      <form method="post" action="{% url 'post-comment' post.pk %}" class="comment-form js-comment-form">
+        {% csrf_token %}
+        <textarea name="body" rows="2" placeholder="Ajouter un commentaire..."></textarea>
+        <button type="submit" class="btn btn--primary btn--sm">Publier</button>
+      </form>
+    {% endif %}
+  </section>
+</article>

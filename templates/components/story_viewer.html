@@ -1,0 +1,169 @@
+<style>
+  /* Story Viewer Modal */
+  .story-viewer {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(0, 0, 0, 0.95);
+    display: none;
+    place-items: center;
+    padding: env(safe-area-inset-top) 1rem env(safe-area-inset-bottom);
+  }
+
+  .story-viewer.is-active {
+    display: grid;
+  }
+
+  .story-viewer__container {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    aspect-ratio: 9/16;
+    background: var(--gradient);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    animation: storyOpen 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes storyOpen {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .story-viewer__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .story-viewer__content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 1.5rem;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.8) 100%);
+    color: white;
+  }
+
+  .story-viewer__header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .story-viewer__avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.2);
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    border: 1px solid rgba(255,255,255,0.3);
+    font-size: 1.2rem;
+  }
+
+  .story-viewer__close {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 2010;
+    display: grid;
+    place-items: center;
+    backdrop-filter: blur(8px);
+    transition: all 0.2s;
+  }
+
+  .story-viewer__close:hover {
+    background: rgba(255,255,255,0.3);
+    transform: rotate(90deg);
+  }
+
+  .story-viewer__body {
+    font-size: 1.25rem;
+    line-height: 1.4;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+</style>
+
+<div class="story-viewer" id="story-viewer" aria-modal="true" role="dialog">
+  <button class="story-viewer__close" id="story-viewer-close" title="Fermer"><i class="bi bi-x-lg"></i></button>
+  <div class="story-viewer__container">
+    <img src="" alt="" class="story-viewer__img" id="story-viewer-img" hidden>
+    <div class="story-viewer__content">
+      <header class="story-viewer__header">
+        <div class="story-viewer__avatar" id="story-viewer-avatar"></div>
+        <div>
+          <strong id="story-viewer-author" style="font-size: 1.1rem;"></strong>
+          <br>
+          <small id="story-viewer-time" style="opacity: 0.9; font-size: 0.8rem; font-weight: 500;"></small>
+        </div>
+      </header>
+      <div class="story-viewer__body" id="story-viewer-body"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const viewer = document.getElementById("story-viewer");
+    const viewerImg = document.getElementById("story-viewer-img");
+    const viewerAuthor = document.getElementById("story-viewer-author");
+    const viewerAvatar = document.getElementById("story-viewer-avatar");
+    const viewerBody = document.getElementById("story-viewer-body");
+    const viewerTime = document.getElementById("story-viewer-time");
+    const viewerClose = document.getElementById("story-viewer-close");
+
+    function openStory(data) {
+      if (!viewer) return;
+      viewerAuthor.textContent = data.author;
+      viewerAvatar.textContent = (data.author || "U").charAt(0).toUpperCase();
+      viewerBody.textContent = data.content || "";
+      viewerTime.textContent = "Publié il y a " + (data.time || "");
+      
+      if (data.image && data.image !== "None" && data.image !== "") {
+        viewerImg.src = data.image;
+        viewerImg.hidden = false;
+      } else {
+        viewerImg.hidden = true;
+      }
+      
+      viewer.classList.add("is-active");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeStory() {
+      if (!viewer) return;
+      viewer.classList.remove("is-active");
+      document.body.style.overflow = "";
+      viewerImg.src = "";
+    }
+
+    document.addEventListener("click", (e) => {
+      const tile = e.target.closest(".js-story-view");
+      if (tile && !e.target.closest("form") && !e.target.closest("button")) {
+        openStory(tile.dataset);
+      }
+      
+      if (e.target === viewer || e.target === viewerClose || e.target.closest("#story-viewer-close")) {
+        closeStory();
+      }
+    });
+
+    // Fermer avec Echap
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeStory();
+    });
+  })();
+</script>

@@ -1,0 +1,505 @@
+{% extends "base.html" %}
+{% block title %}Recherche - NEXTGEN{% endblock %}
+
+{% block extra_head %}
+<style>
+  .search-shell { display: grid; gap: 1.5rem; }
+  .search-card { padding: 2rem; text-align: center; background: var(--gradient-soft); border-color: rgba(79, 70, 229, 0.2); }
+  
+  .search-form {
+    max-width: 700px;
+    margin: 1.5rem auto 0;
+    display: flex;
+    gap: 0.75rem;
+    position: relative;
+  }
+  
+  .search-form i {
+    position: absolute;
+    left: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--primary);
+    font-size: 1.2rem;
+  }
+
+  .search-form input {
+    width: 100%;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+    padding: 1.1rem 1.2rem 1.1rem 3.2rem;
+    font-size: 1.05rem;
+    box-shadow: var(--shadow);
+    transition: all 0.2s;
+  }
+
+  .search-form input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+  }
+
+  .search-grid {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  .results-panel { padding: 1.5rem; }
+  
+  .user-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1.5rem;
+    border-radius: 24px;
+    background: var(--panel-strong);
+    border: 1px solid var(--border);
+    transition: transform 0.2s;
+  }
+
+  .user-card:hover {
+    transform: translateY(-4px);
+  }
+
+  .user-card__avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 24px;
+    background: var(--gradient);
+    color: white;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow-soft);
+    overflow: hidden;
+  }
+
+  .user-card__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .user-card__info h3 { margin: 0; font-size: 1.1rem; }
+  .user-card__info p { margin: 0.25rem 0 1rem; color: var(--text-muted); font-size: 0.9rem; }
+
+  .post-results {
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  .post-card {
+    display: grid;
+    gap: 1rem;
+    padding: 1.25rem;
+  }
+
+  .post-card__header,
+  .post-card__author,
+  .post-card__metrics,
+  .post-card__actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .post-card__author {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .post-card__avatar,
+  .comment-item__avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 18px;
+    overflow: hidden;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    background: var(--gradient);
+    color: #fff;
+    font-weight: 800;
+  }
+
+  .post-card__author strong {
+    display: block;
+    margin-bottom: 0.2rem;
+  }
+
+  .post-card__author small {
+    color: var(--text-muted);
+  }
+
+  .post-card__type {
+    padding: 0.5rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    background: var(--gradient-soft);
+  }
+
+  .post-card__body {
+    text-align: left;
+  }
+
+  .post-card__body h3 {
+    margin: 0 0 0.55rem;
+    font-size: 1.2rem;
+  }
+
+  .post-card__body p {
+    margin: 0;
+    line-height: 1.7;
+    color: var(--text-soft);
+  }
+
+  .post-card__image {
+    margin-top: 1rem;
+    overflow: hidden;
+    border-radius: 22px;
+    border: 1px solid var(--border);
+  }
+
+  .post-card__image img {
+    width: 100%;
+    max-height: 460px;
+    object-fit: cover;
+  }
+
+  .post-card__metrics {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    justify-content: flex-start;
+  }
+
+  .action-pill {
+    min-height: 42px;
+    padding: 0 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-soft);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+
+  .action-pill:hover {
+    border-color: rgba(79, 70, 229, 0.25);
+    background: var(--gradient-soft);
+    color: var(--text);
+  }
+
+  .action-pill.is-liked {
+    color: var(--danger);
+    border-color: rgba(225, 29, 72, 0.24);
+    background: rgba(225, 29, 72, 0.1);
+  }
+
+  .action-pill.is-saved {
+    color: var(--primary);
+    border-color: rgba(37, 99, 235, 0.22);
+    background: rgba(37, 99, 235, 0.1);
+  }
+
+  .comments-panel {
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+    text-align: left;
+  }
+
+  .comments-list {
+    display: grid;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+  }
+
+  .comment-item {
+    display: flex;
+    gap: 0.85rem;
+    align-items: flex-start;
+  }
+
+  .comment-item__avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+  }
+
+  .comment-item__body {
+    flex: 1;
+    background: var(--panel-strong);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 0.85rem 1rem;
+  }
+
+  .comment-item__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .comment-item__header span,
+  .comments-empty {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+  }
+
+  .comment-item__body p {
+    margin: 0;
+    color: var(--text-soft);
+  }
+
+  .comment-form {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-end;
+  }
+
+  .comment-form textarea {
+    flex: 1;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    background: var(--panel-strong);
+    color: var(--text);
+    padding: 0.9rem 1rem;
+    resize: none;
+  }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin: 0 0 1rem;
+    font-size: 1rem;
+    font-weight: 800;
+  }
+
+  .suggested-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+  }
+
+  .tag-pill {
+    padding: 0.5rem 1rem;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-soft);
+    transition: all 0.2s;
+  }
+
+  .tag-pill:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+
+  @media (max-width: 960px) {
+    .search-grid { grid-template-columns: 1fr; }
+    .search-form { flex-direction: column; }
+    .search-form input { border-radius: 20px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-shell">
+  <section class="surface search-card">
+    <h1 style="font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 2.2rem; margin-bottom: 0.5rem;">Découvrez la communauté</h1>
+    <p style="color:var(--text-soft); font-size: 1.1rem;">Trouvez des experts, des projets inspirants et des opportunités.</p>
+    
+    <form method="get" action="{% url 'search' %}" class="search-form">
+      <i class="bi bi-search"></i>
+      <input type="text" name="q" value="{{ query }}" placeholder="Rechercher un développeur, une techno, un projet..." autofocus>
+      <button type="submit" class="btn btn--primary">Rechercher</button>
+    </form>
+
+    <div class="suggested-tags">
+      <span style="color: var(--text-muted); font-size: 0.85rem; align-self: center; margin-right: 0.5rem;">Suggestions :</span>
+      <a href="?q=Python" class="tag-pill">#Python</a>
+      <a href="?q=React" class="tag-pill">#React</a>
+      <a href="?q=Stage" class="tag-pill">#Stage</a>
+      <a href="?q=IA" class="tag-pill">#IntelligenceArtificielle</a>
+    </div>
+  </section>
+
+  {% if query %}
+    <div class="search-grid">
+      <!-- Section Utilisateurs -->
+      <section class="results-column">
+        <h2 class="section-title"><i class="bi bi-people-fill"></i> Développeurs ({{ users|length }})</h2>
+        <div style="display: grid; gap: 1rem;">
+          {% for result in users %}
+            <article class="user-card">
+              <div class="user-card__avatar">
+                {% if result.profile.avatar %}
+                  <img src="{{ result.profile.avatar.url }}" alt="{{ result.username }}">
+                {% else %}
+                  {{ result.username|upper|first }}
+                {% endif %}
+              </div>
+              <div class="user-card__info">
+                <h3>{{ result.get_full_name|default:result.username }}</h3>
+                <p>@{{ result.username }} • {{ result.followers_count }} followers</p>
+                <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                  <a href="{% url 'profile-detail' result.pk %}" class="btn btn--secondary btn--sm">Voir Profil</a>
+                  {% if user.is_authenticated and result.pk != user.pk %}
+                    <form method="post" action="{% url 'user-follow' result.pk %}" class="js-follow-form">
+                      {% csrf_token %}
+                      <button type="submit" class="btn {% if result.is_following %}btn--ghost{% else %}btn--primary{% endif %} btn--sm">
+                        {% if result.is_following %}Ne plus suivre{% else %}Suivre{% endif %}
+                      </button>
+                    </form>
+                  {% endif %}
+                </div>
+              </div>
+            </article>
+          {% empty %}
+            <div class="surface" style="padding: 2rem; text-align: center; color: var(--text-muted);">
+              <i class="bi bi-person-exclamation" style="font-size: 2rem;"></i>
+              <p>Aucun profil ne correspond à "{{ query }}".</p>
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <!-- Section Posts -->
+      <section class="results-column">
+        <h2 class="section-title"><i class="bi bi-stickies-fill"></i> Publications ({{ posts|length }})</h2>
+        <div class="post-results">
+          {% for post in posts %}
+            {% include "components/post_card.html" with post=post %}
+          {% empty %}
+            <div class="surface" style="padding: 2rem; text-align: center; color: var(--text-muted);">
+              <i class="bi bi-chat-square-quote" style="font-size: 2rem;"></i>
+              <p>Aucun post trouvé pour cette recherche.</p>
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+    </div>
+  {% else %}
+    <!-- État vide : Tendances ou suggestions -->
+    <div class="surface" style="padding: 4rem 2rem; text-align: center; border: 2px dashed var(--border); background: transparent;">
+      <i class="bi bi-lightning-charge" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem; display: block;"></i>
+      <h2 style="margin-bottom: 0.5rem;">Prêt à explorer ?</h2>
+      <p style="color: var(--text-muted); max-width: 500px; margin: 0 auto;">Entrez un mot-clé ci-dessus pour trouver les meilleurs talents et les projets les plus innovants de la communauté DevConnect.</p>
+    </div>
+  {% endif %}
+</div>
+
+<script>
+  // On s'assure que les boutons "Suivre", "Like", "Sauvegarder" et les commentaires fonctionnent en AJAX
+  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+
+  function fetchWithCsrf(url, options = {}) {
+    const headers = new Headers(options.headers || {});
+    headers.set("X-Requested-With", "XMLHttpRequest");
+    if (csrfToken && !headers.has("X-CSRFToken")) {
+      headers.set("X-CSRFToken", csrfToken);
+    }
+    return fetch(url, { ...options, headers });
+  }
+
+  document.addEventListener("click", (event) => {
+    const commentToggle = event.target.closest(".js-comment-toggle");
+    if (commentToggle) {
+      const panel = document.getElementById(commentToggle.dataset.target);
+      if (panel) panel.hidden = !panel.hidden;
+    }
+  });
+
+  document.addEventListener("submit", async (event) => {
+    // Follow
+    const followForm = event.target.closest(".js-follow-form");
+    if (followForm) {
+      event.preventDefault();
+      const button = followForm.querySelector("button");
+      const response = await fetchWithCsrf(followForm.action, { method: "POST" });
+      if (response.ok) {
+        const data = await response.json();
+        button.textContent = data.following ? "Ne plus suivre" : "Suivre";
+        button.className = `btn ${data.following ? "btn--ghost" : "btn--primary"} btn--sm`;
+      }
+      return;
+    }
+
+    // Like
+    const likeForm = event.target.closest(".js-like-form");
+    if (likeForm) {
+      event.preventDefault();
+      const button = likeForm.querySelector("button");
+      const countNode = likeForm.closest(".post-card").querySelector("[data-like-count]");
+      const response = await fetchWithCsrf(likeForm.action, { method: "POST" });
+      if (response.ok) {
+        const data = await response.json();
+        button.classList.toggle("is-liked", data.liked);
+        button.querySelector("i").className = `bi ${data.liked ? "bi-heart-fill" : "bi-heart"}`;
+        button.querySelector("span").textContent = data.liked ? "J'aime" : "Like";
+        countNode.textContent = data.likes_count;
+      }
+      return;
+    }
+
+    // Save
+    const saveForm = event.target.closest(".js-save-form");
+    if (saveForm) {
+      event.preventDefault();
+      const button = saveForm.querySelector("button");
+      const countNode = saveForm.closest(".post-card")?.querySelector("[data-save-count]");
+      const response = await fetchWithCsrf(saveForm.action, { method: "POST" });
+      if (response.ok) {
+        const data = await response.json();
+        button.classList.toggle("is-saved", data.saved);
+        button.querySelector("i").className = `bi ${data.saved ? "bi-bookmark-heart-fill" : "bi-bookmark-heart"}`;
+        button.querySelector("span").textContent = data.saved ? "Sauvegarde" : "Sauvegarder";
+        if (countNode) {
+          countNode.textContent = data.saves_count;
+        }
+        saveForm.action = data.saved ? saveForm.action.replace("/sauvegarder/", "/retirer-sauvegarde/") : saveForm.action.replace("/retirer-sauvegarde/", "/sauvegarder/");
+      }
+      return;
+    }
+
+    // Comment
+    const commentForm = event.target.closest(".js-comment-form");
+    if (commentForm) {
+      event.preventDefault();
+      const formData = new FormData(commentForm);
+      const response = await fetchWithCsrf(commentForm.action, { method: "POST", body: formData });
+      if (response.ok) {
+        const data = await response.json();
+        const list = commentForm.closest(".comments-panel").querySelector(".comments-list");
+        const emptyState = list.querySelector(".comments-empty");
+        if (emptyState) emptyState.remove();
+        list.insertAdjacentHTML("beforeend", data.comment_html);
+        commentForm.reset();
+        commentForm.closest(".post-card").querySelector("[data-comment-count]").textContent = data.comments_count;
+      }
+      return;
+    }
+  });
+</script>
+{% endblock %}

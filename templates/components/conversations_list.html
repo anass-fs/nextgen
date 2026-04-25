@@ -1,0 +1,25 @@
+{% for conversation in conversations %}
+  <a href="{% url 'messages' %}?user={{ conversation.other_user.username }}" class="conversation-link {% if selected_user and selected_user.pk == conversation.other_user.pk %}is-active{% endif %}">
+    <span class="conversation-avatar">
+      {% if conversation.other_user.profile.avatar %}
+        <img src="{{ conversation.other_user.profile.avatar.url }}" alt="{{ conversation.other_user.username }}">
+      {% else %}
+        {{ conversation.other_user.username|upper|first }}
+      {% endif %}
+    </span>
+    <span class="conversation-meta">
+      <strong>{{ conversation.display_name }}</strong>
+      <p>{% if conversation.last_message %}{{ conversation.last_message.body }}{% else %}Commencer la conversation{% endif %}</p>
+    </span>
+    {% if conversation.unread_count %}
+      <span class="unread-chip">{{ conversation.unread_count }}</span>
+    {% endif %}
+  </a>
+{% empty %}
+  <div class="thread-empty" style="min-height:220px;">
+    <div>
+      <i class="bi bi-chat-square-heart"></i>
+      <p>Pas encore de messages.</p>
+    </div>
+  </div>
+{% endfor %}
